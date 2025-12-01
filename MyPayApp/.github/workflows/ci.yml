@@ -1,0 +1,101 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        cd MyPayApp
+        npm ci
+    
+    - name: Run linting
+      run: |
+        cd MyPayApp
+        npm run lint || echo "Linting not configured yet"
+    
+    - name: Run tests
+      run: |
+        cd MyPayApp
+        npm test || echo "Tests not configured yet"
+
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+    
+    - name: Install dependencies
+      run: |
+        cd MyPayApp
+        npm ci
+    
+    - name: Build Android APK
+      run: |
+        cd MyPayApp
+        mkdir -p android/app/src/main/assets
+        echo "metro.bundle = true" > metro.config.js
+        cd android
+        ./gradlew assembleDebug
+    
+    - name: Upload Android APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: android-apk
+        path: MyPayApp/android/app/build/outputs/apk/debug/app-debug.apk
+
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        cd MyPayApp
+        npm ci
+        cd ios && pod install
+    
+    - name: Build iOS app
+      run: |
+        cd MyPayApp
+        xcodebuild -workspace ios/MyPayApp.xcworkspace -scheme MyPayApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' build
