@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useDispatch, useSelector } from 'react-redux';
@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { fetchTransactionsForMonth } from './historySlice';
 import { RootState } from '../store/store';
-import { groupTransactionsByDay, formatCurrency } from '../utils/dateHelpers';
+import { formatCurrency } from '../utils/dateHelpers';
 import { DayTotal } from '../types';
 import Card from '../components/ui/Button';
 
@@ -22,7 +22,6 @@ const CalendarHistory: React.FC = () => {
   const navigation = useNavigation<CalendarHistoryNavigationProp>();
   
   const { 
-    transactions, 
     currentMonth, 
     dayTotals, 
     monthSummary, 

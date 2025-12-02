@@ -1,6 +1,5 @@
 import { Transaction } from '../types';
 import { databaseService } from '../libs/db/database';
-import { getTransactionsForMonth, groupTransactionsByDay } from '../utils/dateHelpers';
 
 export class HistoryService {
   /**
@@ -163,10 +162,6 @@ export class HistoryService {
    */
   async getTransactionsForDateRange(startDate: Date, endDate: Date): Promise<Transaction[]> {
     try {
-      // Convert dates to ISO strings for database query
-      const startISO = startDate.toISOString();
-      const endISO = endDate.toISOString();
-
       // This would need to be implemented in the database service
       // For now, we'll fetch all transactions and filter in memory
       const allTransactions = await databaseService.getTransactions();

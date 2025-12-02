@@ -20,7 +20,6 @@ import { Account, Transaction } from '../../types';
 const PayScreen: React.FC = () => {
   const dispatch = useDispatch();
   const { accounts, isSendingPayment, lastPaymentResult } = useSelector((state: RootState) => state.payments);
-  const { user } = useSelector((state: RootState) => state.auth);
 
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
@@ -31,8 +30,6 @@ const PayScreen: React.FC = () => {
   React.useEffect(() => {
     dispatch(fetchAccounts() as any);
   }, [dispatch]);
-
-  const { user } = useSelector((state: RootState) => state.auth);
 
   React.useEffect(() => {
     if (lastPaymentResult) {

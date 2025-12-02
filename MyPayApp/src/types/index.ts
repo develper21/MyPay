@@ -4,6 +4,7 @@ export interface Account {
   maskedAccountNumber: string;
   accountName: string;
   currency: string;
+  type?: 'checking' | 'savings' | 'credit' | 'other';
   lastSync: Date;
 }
 
