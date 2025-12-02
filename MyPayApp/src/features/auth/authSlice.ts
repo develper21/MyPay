@@ -87,7 +87,7 @@ export const logout = createAsyncThunk(
   'auth/logout',
   async () => {
     // Clear stored token
-    await Keychain.resetInternetCredentials('auth-token');
+    await Keychain.resetInternetCredentials('auth-token' as any);
     return null;
   }
 );
