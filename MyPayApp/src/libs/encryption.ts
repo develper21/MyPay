@@ -67,7 +67,6 @@ export class EncryptionService {
       // In production, use proper AES encryption
       const encrypted = this.simpleXOREncrypt(data, key);
       if (typeof btoa !== 'undefined') {
-        // eslint-disable-next-line no-bitwise
         return btoa(encrypted.join(',')); // Base64 encode
       } else {
         // React Native doesn't have btoa, so we'll implement a simple base64 encode
@@ -112,9 +111,9 @@ export class EncryptionService {
     }
   }
 
-  private simpleXOREncrypt(text: string, key: string): string[] {
-    // eslint-disable-next-line no-bitwise
+  private simpleXOREncrypt(text: string, key: string): number[] {
     return text.split('').map((char, i) => {
+      // eslint-disable-next-line no-bitwise
       return char.charCodeAt(0) ^ key.charCodeAt(i % key.length);
     });
   }
@@ -123,20 +122,19 @@ export class EncryptionService {
     // XOR is symmetric, so we use the same function
     const decrypted = this.simpleXOREncrypt(encryptedText, key);
     return String.fromCharCode(...decrypted);
-    return this.simpleXOREncrypt(encryptedText, key);
   }
 
-  private simpleBase64Encode(str: string): string {
+  private simpleBase64Encode(numbers: number[]): string {
     // Simple base64 implementation for React Native
     // In production, use a proper library like 'base-64'
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     let result = '';
     let i = 0;
     
-    while (i < str.length) {
-      const a = str.charCodeAt(i++);
-      const b = i < str.length ? str.charCodeAt(i++) : 0;
-      const c = i < str.length ? str.charCodeAt(i++) : 0;
+    while (i < numbers.length) {
+      const a = numbers[i++];
+      const b = i < numbers.length ? numbers[i++] : 0;
+      const c = i < numbers.length ? numbers[i++] : 0;
       
       // eslint-disable-next-line no-bitwise
       const bitmap = (a << 16) | (b << 8) | c;
@@ -146,9 +144,9 @@ export class EncryptionService {
       // eslint-disable-next-line no-bitwise
       result += chars.charAt((bitmap >> 12) & 63);
       // eslint-disable-next-line no-bitwise
-      result += i - 2 < str.length ? chars.charAt((bitmap >> 6) & 63) : '=';
+      result += i - 2 < numbers.length ? chars.charAt((bitmap >> 6) & 63) : '=';
       // eslint-disable-next-line no-bitwise
-      result += i - 1 < str.length ? chars.charAt(bitmap & 63) : '=';
+      result += i - 1 < numbers.length ? chars.charAt(bitmap & 63) : '=';
     }
     
     return result;
