@@ -8,12 +8,12 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../auth/authSlice';
-import { RootState } from '../../store/store';
+import { RootState, AppDispatch } from '../../store/store';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 
 const MoreScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { user, biometricEnabled } = useSelector((state: RootState) => state.auth);
 
   const handleLogout = () => {
@@ -74,7 +74,7 @@ const MoreScreen: React.FC = () => {
             </View>
             <View style={[
               styles.statusIndicator,
-              { backgroundColor: biometricEnabled ? '#4caf50' : '#ccc' }
+              biometricEnabled ? styles.statusEnabled : styles.statusDisabled
             ]} />
           </View>
         </Card>
@@ -178,6 +178,12 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
+  },
+  statusEnabled: {
+    backgroundColor: '#4caf50',
+  },
+  statusDisabled: {
+    backgroundColor: '#ccc',
   },
   actionButton: {
     marginVertical: 4,
