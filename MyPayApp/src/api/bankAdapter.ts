@@ -1,5 +1,8 @@
 import { Account, Transaction, AuthToken } from '../types';
 
+// Declare process for React Native compatibility
+declare const process: { env?: { NODE_ENV?: string } } | undefined;
+
 // Abstract interface for bank integration
 export interface BankAdapter {
   connect(credentials: BankCredentials): Promise<AuthToken>;
@@ -30,7 +33,7 @@ export interface PaymentResult {
 // Mock implementation for development and testing
 export class MockBankAdapter implements BankAdapter {
   async connect(credentials: BankCredentials): Promise<AuthToken> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 1000));
 
     if (credentials.username === 'testuser' && credentials.password === 'testpass') {
       return {
@@ -45,11 +48,11 @@ export class MockBankAdapter implements BankAdapter {
   }
 
   async disconnect(_token: string): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
   }
 
   async getAccounts(_token: string): Promise<Account[]> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 1000));
 
     return [
       {
@@ -74,7 +77,7 @@ export class MockBankAdapter implements BankAdapter {
   }
 
   async getTransactions(_accountId: string, _since: Date, _until: Date): Promise<Transaction[]> {
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 1500));
 
     const mockTransactions: Transaction[] = [
       {
@@ -109,7 +112,7 @@ export class MockBankAdapter implements BankAdapter {
   }
 
   async sendPayment(_request: PaymentRequest): Promise<PaymentResult> {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
 
     return {
       success: true,
@@ -145,8 +148,15 @@ export class ProductionBankAdapter implements BankAdapter {
 
 // Factory function to get the appropriate adapter
 export function getBankAdapter(): BankAdapter {
-  const isDevelopment = typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production';
-  return isDevelopment ? new MockBankAdapter() : new ProductionBankAdapter();
+  // In React Native, process is not available; default to mock adapter for development
+  try {
+    // Try to access process (available in Node.js environments)
+    const env = (typeof process !== 'undefined' && process.env?.NODE_ENV) || 'development';
+    return env === 'production' ? new ProductionBankAdapter() : new MockBankAdapter();
+  } catch {
+    // In React Native or browser environments, default to mock adapter
+    return new MockBankAdapter();
+  }
 }
 
 export const bankAdapter = getBankAdapter();
