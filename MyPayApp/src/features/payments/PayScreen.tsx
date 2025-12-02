@@ -11,14 +11,14 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { sendPayment, fetchAccounts } from './paymentsSlice';
 import { addTransaction } from '../../history/historySlice';
-import { RootState } from '../../store/store';
+import { RootState, AppDispatch } from '../../store/store';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { formatCurrency } from '../../utils/dateHelpers';
 import { Account, Transaction } from '../../types';
 
 const PayScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { accounts, isSendingPayment, lastPaymentResult } = useSelector((state: RootState) => state.payments);
 
   const [recipient, setRecipient] = useState('');
@@ -28,7 +28,7 @@ const PayScreen: React.FC = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   React.useEffect(() => {
-    dispatch(fetchAccounts() as any);
+    dispatch(fetchAccounts());
   }, [dispatch]);
 
   React.useEffect(() => {
@@ -55,7 +55,7 @@ const PayScreen: React.FC = () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        dispatch(addTransaction(newTransaction) as any);
+        dispatch(addTransaction(newTransaction));
       } else {
         Alert.alert('Payment Failed', lastPaymentResult.error || 'Something went wrong');
       }
@@ -91,7 +91,7 @@ const PayScreen: React.FC = () => {
       metadata: { note, fromAccount: selectedAccount.id },
     };
 
-    dispatch(sendPayment(paymentRequest as any));
+    dispatch(sendPayment(paymentRequest));
   };
 
   const mockAccounts: Account[] = accounts.length > 0 ? accounts : [
