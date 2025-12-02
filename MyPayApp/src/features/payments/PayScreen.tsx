@@ -101,6 +101,7 @@ const PayScreen: React.FC = () => {
       maskedAccountNumber: '****1234',
       accountName: 'Checking Account',
       currency: 'USD',
+      type: 'checking',
       lastSync: new Date(),
     },
     {
@@ -109,6 +110,7 @@ const PayScreen: React.FC = () => {
       maskedAccountNumber: '****5678',
       accountName: 'Savings Account',
       currency: 'USD',
+      type: 'savings',
       lastSync: new Date(),
     },
   ];
