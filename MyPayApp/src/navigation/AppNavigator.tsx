@@ -1,7 +1,8 @@
+/* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
@@ -27,60 +28,49 @@ export type MainTabParamList = {
   More: undefined;
 };
 
-const Stack = createStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Tab bar icon component moved outside to avoid re-creation on every render
+const TabBarIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
+  let iconName: string;
+
+  switch (routeName) {
+    case 'Home':
+      iconName = 'home';
+      break;
+    case 'Pay':
+      iconName = 'payment';
+      break;
+    case 'History':
+      iconName = 'history';
+      break;
+    case 'More':
+      iconName = 'more-horiz';
+      break;
+    default:
+      iconName = 'help';
+  }
+
+  return <Icon name={iconName} size={size} color={color} />;
+};
 
 const MainTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
-
-          switch (route.name) {
-            case 'Home':
-              iconName = 'home';
-              break;
-            case 'Pay':
-              iconName = 'send';
-              break;
-            case 'History':
-              iconName = 'history';
-              break;
-            case 'More':
-              iconName = 'more-horiz';
-              break;
-            default:
-              iconName = 'help';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
+        tabBarIcon: ({ color, size }) => (
+          <TabBarIcon routeName={route.name} color={color} size={size} />
+        ),
         tabBarActiveTintColor: '#1976d2',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}
     >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
-        options={{ title: 'Home' }}
-      />
-      <Tab.Screen 
-        name="Pay" 
-        component={PayScreen}
-        options={{ title: 'Pay' }}
-      />
-      <Tab.Screen 
-        name="History" 
-        component={CalendarHistory}
-        options={{ title: 'History' }}
-      />
-      <Tab.Screen 
-        name="More" 
-        component={MoreScreen}
-        options={{ title: 'More' }}
-      />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Pay" component={PayScreen} />
+      <Tab.Screen name="History" component={CalendarHistory} />
+      <Tab.Screen name="More" component={MoreScreen} />
     </Tab.Navigator>
   );
 };
