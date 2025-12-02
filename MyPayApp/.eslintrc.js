@@ -17,5 +17,20 @@ module.exports = {
         '@typescript-eslint/no-var-requires': 'off',
       },
     },
+    {
+      files: ['index.js'],
+      env: {
+        node: true,
+      },
+      parserOptions: {
+        sourceType: 'module',
+        ecmaVersion: 2020,
+        requireConfigFile: false,
+      },
+      rules: {
+        'no-undef': 'off',
+        '@typescript-eslint/no-var-requires': 'off',
+      },
+    },
   ],
 };
