@@ -11,12 +11,12 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, authenticateWithBiometrics, enableBiometrics } from './authSlice';
-import { RootState } from '../../store/store';
+import { RootState, AppDispatch } from '../../store/store';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 
 const AuthScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { isLoading, error, biometricEnabled } = useSelector((state: RootState) => state.auth);
   
   const [email, setEmail] = useState('user@example.com');
@@ -28,8 +28,7 @@ const AuthScreen: React.FC = () => {
       if (login.fulfilled.match(result)) {
         // Login successful
       }
-    } catch (error) {
-      console.error('Login failed:', error);
+    } catch {
       Alert.alert('Login Failed', 'Invalid credentials. Try user@example.com / password');
     }
   };
@@ -40,8 +39,7 @@ const AuthScreen: React.FC = () => {
       if (authenticateWithBiometrics.fulfilled.match(result)) {
         // Biometric login successful
       }
-    } catch (error) {
-      console.error('Biometric login failed:', error);
+    } catch {
       Alert.alert('Biometric Login Failed', 'Please try again or use password login');
     }
   };
@@ -53,8 +51,7 @@ const AuthScreen: React.FC = () => {
         // Biometric enabled successfully
         Alert.alert('Success', 'Biometrics enabled for future logins');
       }
-    } catch (error) {
-      console.error('Enable biometric failed:', error);
+    } catch {
       Alert.alert('Failed', 'Could not enable biometrics');
     }
   };
