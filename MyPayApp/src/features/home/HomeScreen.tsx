@@ -9,29 +9,29 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAccounts } from '../payments/paymentsSlice';
 import { syncTransactions } from '../../history/historySlice';
-import { RootState } from '../../store/store';
+import { RootState, AppDispatch } from '../../store/store';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { formatCurrency } from '../../utils/dateHelpers';
 
 const HomeScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { accounts, isLoading: accountsLoading } = useSelector((state: RootState) => state.payments);
   const { transactions, isLoading: transactionsLoading, monthSummary } = useSelector((state: RootState) => state.history);
   const { user } = useSelector((state: RootState) => state.auth);
 
   const isLoading = accountsLoading || transactionsLoading;
 
-  const handleRefresh = () => {
+  const handleRefresh = React.useCallback(() => {
     dispatch(fetchAccounts());
     dispatch(syncTransactions());
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     handleRefresh();
-  }, []);
+  }, [handleRefresh]);
 
-  const totalBalance = accounts.reduce((sum, account) => {
+  const totalBalance = accounts.reduce((sum, _account) => {
     // In a real app, you'd calculate actual balance from transactions
     return sum + 2500; // Mock balance
   }, 0);
