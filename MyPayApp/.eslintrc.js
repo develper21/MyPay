@@ -3,7 +3,7 @@ module.exports = {
   extends: '@react-native',
   overrides: [
     {
-      files: ['jest.config.js', '.eslintrc.js', 'babel.config.js'],
+      files: ['jest.config.js', '.eslintrc.js', 'babel.config.js', 'jest.setup.js', 'metro.config.js'],
       env: {
         node: true,
       },
