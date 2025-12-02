@@ -25,7 +25,7 @@ export const fetchAccounts = createAsyncThunk(
       // In a real app, this would call the bank adapter
       const accounts = await databaseService.getAccounts();
       return accounts;
-    } catch (error) {
+    } catch {
       throw new Error('Failed to fetch accounts');
     }
   }
@@ -33,10 +33,10 @@ export const fetchAccounts = createAsyncThunk(
 
 export const sendPayment = createAsyncThunk(
   'payments/sendPayment',
-  async (paymentRequest: PaymentRequest) => {
+  async (_paymentRequest: PaymentRequest) => {
     try {
       // Mock payment processing - replace with actual payment gateway
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
+      await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
       
       // Simulate 90% success rate
       if (Math.random() > 0.1) {
