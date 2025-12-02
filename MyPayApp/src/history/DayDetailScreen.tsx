@@ -8,24 +8,31 @@ import {
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RouteProp } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { RootState } from '../store/store';
+import { RootState, AppDispatch } from '../store/store';
 import { formatCurrency, getTransactionsForDate, groupTransactionsByDay } from '../utils/dateHelpers';
 import Card from '../components/ui/Card';
 import { fetchTransactionsForMonth } from './historySlice';
 
 type DayDetailRouteProp = RouteProp<RootStackParamList, 'DayDetail'>;
-type DayDetailNavigationProp = StackNavigationProp<RootStackParamList, 'DayDetail'>;
+type DayDetailNavigationProp = NativeStackNavigationProp<RootStackParamList, 'DayDetail'>;
 
 interface Props {
   route: DayDetailRouteProp;
   navigation: DayDetailNavigationProp;
 }
 
-const DayDetailScreen: React.FC<Props> = ({ route, navigation }) => {
+// Empty component moved outside to avoid re-creation on every render
+const EmptyComponent: React.FC = () => (
+  <Card style={styles.emptyCard}>
+    <Text style={styles.emptyText}>No transactions on this date</Text>
+  </Card>
+);
+
+const DayDetailScreen: React.FC<Props> = ({ route, navigation: _navigation }) => {
   const { date } = route.params;
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   
   const { transactions, currentMonth, isLoading } = useSelector((state: RootState) => state.history);
 
@@ -135,11 +142,7 @@ const DayDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={() => dispatch(fetchTransactionsForMonth(currentMonth))} />
         }
-        ListEmptyComponent={() => (
-          <Card style={styles.emptyCard}>
-            <Text style={styles.emptyText}>No transactions on this date</Text>
-          </Card>
-        )}
+        ListEmptyComponent={EmptyComponent}
       />
     </View>
   );
