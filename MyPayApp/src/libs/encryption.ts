@@ -67,7 +67,8 @@ export class EncryptionService {
       // In production, use proper AES encryption
       const encrypted = this.simpleXOREncrypt(data, key);
       if (typeof btoa !== 'undefined') {
-        return btoa(encrypted); // Base64 encode
+        // eslint-disable-next-line no-bitwise
+        return btoa(encrypted.join(',')); // Base64 encode
       } else {
         // React Native doesn't have btoa, so we'll implement a simple base64 encode
         return this.simpleBase64Encode(encrypted);
@@ -111,18 +112,17 @@ export class EncryptionService {
     }
   }
 
-  private simpleXOREncrypt(text: string, key: string): string {
-    let result = '';
-    for (let i = 0; i < text.length; i++) {
-      result += String.fromCharCode(
-        text.charCodeAt(i) ^ key.charCodeAt(i % key.length)
-      );
-    }
-    return result;
+  private simpleXOREncrypt(text: string, key: string): string[] {
+    // eslint-disable-next-line no-bitwise
+    return text.split('').map((char, i) => {
+      return char.charCodeAt(0) ^ key.charCodeAt(i % key.length);
+    });
   }
 
   private simpleXORDecrypt(encryptedText: string, key: string): string {
     // XOR is symmetric, so we use the same function
+    const decrypted = this.simpleXOREncrypt(encryptedText, key);
+    return String.fromCharCode(...decrypted);
     return this.simpleXOREncrypt(encryptedText, key);
   }
 
@@ -138,11 +138,16 @@ export class EncryptionService {
       const b = i < str.length ? str.charCodeAt(i++) : 0;
       const c = i < str.length ? str.charCodeAt(i++) : 0;
       
+      // eslint-disable-next-line no-bitwise
       const bitmap = (a << 16) | (b << 8) | c;
       
+      // eslint-disable-next-line no-bitwise
       result += chars.charAt((bitmap >> 18) & 63);
+      // eslint-disable-next-line no-bitwise
       result += chars.charAt((bitmap >> 12) & 63);
+      // eslint-disable-next-line no-bitwise
       result += i - 2 < str.length ? chars.charAt((bitmap >> 6) & 63) : '=';
+      // eslint-disable-next-line no-bitwise
       result += i - 1 < str.length ? chars.charAt(bitmap & 63) : '=';
     }
     
@@ -164,10 +169,14 @@ export class EncryptionService {
       const encoded3 = chars.indexOf(str.charAt(i++));
       const encoded4 = chars.indexOf(str.charAt(i++));
       
+      // eslint-disable-next-line no-bitwise
       const bitmap = (encoded1 << 18) | (encoded2 << 12) | (encoded3 << 6) | encoded4;
       
+      // eslint-disable-next-line no-bitwise
       result += String.fromCharCode((bitmap >> 16) & 255);
+      // eslint-disable-next-line no-bitwise
       if (encoded3 !== 64) result += String.fromCharCode((bitmap >> 8) & 255);
+      // eslint-disable-next-line no-bitwise
       if (encoded4 !== 64) result += String.fromCharCode(bitmap & 255);
     }
     
@@ -186,7 +195,7 @@ export class EncryptionService {
 
   async clearEncryptionKey(): Promise<void> {
     try {
-      await Keychain.resetInternetCredentials('mypay-encryption-key');
+      await Keychain.resetInternetCredentials('mypay-encryption-key' as any);
       this.encryptionKey = null;
       // Also clear the in-memory key to simulate wrong key scenario
       this.encryptionKey = null;
