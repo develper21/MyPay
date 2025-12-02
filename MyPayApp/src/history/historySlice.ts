@@ -50,7 +50,7 @@ export const fetchTransactionsForMonth = createAsyncThunk(
     try {
       const transactions = await databaseService.getTransactionsForMonth(monthISO);
       return transactions;
-    } catch (_error) {
+    } catch {
       throw new Error('Failed to fetch transactions');
     }
   }
@@ -100,7 +100,7 @@ export const syncTransactions = createAsyncThunk(
       }
 
       return [...existingTransactions, ...newTransactions];
-    } catch (_error) {
+    } catch {
       throw new Error('Failed to sync transactions');
     }
   }
