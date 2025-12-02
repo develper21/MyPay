@@ -8,7 +8,7 @@ import { fetchTransactionsForMonth } from './historySlice';
 import { RootState } from '../store/store';
 import { formatCurrency } from '../utils/dateHelpers';
 import { DayTotal } from '../types';
-import Card from '../components/ui/Button';
+import Card from '../components/ui/Card';
 
 type RootStackParamList = {
   Main: undefined;
@@ -88,7 +88,7 @@ const CalendarHistory: React.FC = () => {
               <Text style={styles.summaryLabel}>Net:</Text>
               <Text style={[
                 styles.netAmount,
-                { color: (monthSummary?.net || 0) >= 0 ? '#4caf50' : '#d32f2f' }
+                (monthSummary?.net || 0) >= 0 ? styles.netPositive : styles.netNegative
               ]}>
                 {formatCurrency(monthSummary?.net || 0)}
               </Text>
@@ -184,6 +184,12 @@ const styles = StyleSheet.create({
   netAmount: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  netPositive: {
+    color: '#4caf50',
+  },
+  netNegative: {
+    color: '#d32f2f',
   },
 });
 
