@@ -1,6 +1,4 @@
-/* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -79,27 +77,25 @@ const AppNavigator = () => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <>
-            <Stack.Screen name="Main" component={MainTabNavigator} />
-            <Stack.Screen 
-              name="DayDetail" 
-              component={DayDetailScreen}
-              options={{ 
-                headerShown: true,
-                title: 'Transaction Details',
-                headerStyle: { backgroundColor: '#1976d2' },
-                headerTintColor: 'white',
-              }}
-            />
-          </>
-        ) : (
-          <Stack.Screen name="Auth" component={AuthScreen} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {isAuthenticated ? (
+        <>
+          <Stack.Screen name="Main" component={MainTabNavigator} />
+          <Stack.Screen 
+            name="DayDetail" 
+            component={DayDetailScreen}
+            options={{ 
+              headerShown: true,
+              title: 'Transaction Details',
+              headerStyle: { backgroundColor: '#1976d2' },
+              headerTintColor: 'white',
+            }}
+          />
+        </>
+      ) : (
+        <Stack.Screen name="Auth" component={AuthScreen} />
+      )}
+    </Stack.Navigator>
   );
 };
 

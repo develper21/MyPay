@@ -2,11 +2,11 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'react-native';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { store, persistor } from './src/store/store';
-import { databaseService } from './src/libs/db/database';
-import AppNavigator from './src/navigation/AppNavigator';
+import { store, persistor } from '../src/store/store';
+import { databaseService } from '../src/libs/db/database';
+import AppNavigator from '../src/navigation/AppNavigator';
 
-const App: React.FC = () => {
+const AppContent = () => {
   useEffect(() => {
     // Initialize database
     databaseService.initDatabase().catch(error => {
@@ -20,13 +20,19 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <StatusBar barStyle="light-content" backgroundColor="#1976d2" />
-        <AppNavigator />
-      </PersistGate>
-    </Provider>
+    <>
+      <StatusBar barStyle="light-content" backgroundColor="#1976d2" />
+      <AppNavigator />
+    </>
   );
 };
 
-export default App;
+export default function RootLayout() {
+  return (
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <AppContent />
+      </PersistGate>
+    </Provider>
+  );
+}

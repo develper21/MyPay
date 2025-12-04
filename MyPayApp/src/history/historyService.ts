@@ -1,5 +1,6 @@
-import { Transaction } from '../types';
+import { Transaction, DayTotal } from '../types';
 import { databaseService } from '../libs/db/database';
+import { groupTransactionsByDay } from '../utils/dateHelpers';
 
 export class HistoryService {
   /**
@@ -19,19 +20,14 @@ export class HistoryService {
    * Sync transactions from bank adapter and save to local database
    */
   async syncTransactionsFromBank(): Promise<Transaction[]> {
-    try {
-      // In a real implementation, this would:
-      // 1. Call bankAdapter.getTransactions() for all accounts
-      // 2. Compare with existing local transactions
-      // 3. Save only new/updated transactions
-      // 4. Handle duplicates and conflicts
+    // In a real implementation, this would:
+    // 1. Call bankAdapter.getTransactions() for all accounts
+    // 2. Compare with existing local transactions
+    // 3. Save only new/updated transactions
+    // 4. Handle duplicates and conflicts
 
-      // For now, return empty array (sync is handled in slice)
-      return [];
-    } catch (error) {
-      console.error('Failed to sync transactions from bank:', error);
-      throw new Error('Failed to sync transactions');
-    }
+    // For now, return empty array (sync is handled in slice)
+    return [];
   }
 
   /**
@@ -93,8 +89,8 @@ export class HistoryService {
       const transactions = await this.fetchTransactionsForMonth(monthISO);
       const dayTotals = groupTransactionsByDay(transactions);
 
-      const totalSpent = Object.values(dayTotals).reduce((sum, day) => sum + day.debitTotal, 0);
-      const totalReceived = Object.values(dayTotals).reduce((sum, day) => sum + day.creditTotal, 0);
+      const totalSpent = Object.values(dayTotals).reduce((sum, day: DayTotal) => sum + day.debitTotal, 0);
+      const totalReceived = Object.values(dayTotals).reduce((sum, day: DayTotal) => sum + day.creditTotal, 0);
       const transactionCount = transactions.length;
 
       // Category breakdown
