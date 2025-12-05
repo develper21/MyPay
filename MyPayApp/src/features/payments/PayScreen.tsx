@@ -47,13 +47,13 @@ const PayScreen: React.FC = () => {
           accountId: selectedAccount?.id || 'acc_1',
           timestamp: new Date().toISOString(),
           amount: parseFloat(amount) * -1, // Negative for outgoing
-          currency: 'USD',
+          currency: 'INR',
           merchantName: recipient,
           type: 'debit',
           status: 'completed',
           rawMeta: { note, paymentMethod: 'app' },
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
         dispatch(addTransaction(newTransaction));
       } else {
