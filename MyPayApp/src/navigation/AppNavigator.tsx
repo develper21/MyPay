@@ -12,11 +12,13 @@ import PayScreen from '../features/payments/PayScreen';
 import CalendarHistory from '../history/CalendarHistory';
 import MoreScreen from '../features/more/MoreScreen';
 import DayDetailScreen from '../history/DayDetailScreen';
+import TripGoalScreen from '../features/trip/TripGoalScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   DayDetail: { date: string };
+  TripGoals: undefined;
 };
 
 export type MainTabParamList = {
@@ -87,6 +89,16 @@ const AppNavigator = () => {
             options={{ 
               headerShown: true,
               title: 'Transaction Details',
+              headerStyle: { backgroundColor: '#1976d2' },
+              headerTintColor: 'white',
+            }}
+          />
+          <Stack.Screen 
+            name="TripGoals" 
+            component={TripGoalScreen}
+            options={{ 
+              headerShown: true,
+              title: 'Trip Goals',
               headerStyle: { backgroundColor: '#1976d2' },
               headerTintColor: 'white',
             }}

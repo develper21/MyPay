@@ -5,6 +5,7 @@ import { combineReducers } from '@reduxjs/toolkit';
 import authSlice from '../features/auth/authSlice';
 import paymentsSlice from '../features/payments/paymentsSlice';
 import historySlice from '../history/historySlice';
+import tripSlice from '../features/trip/tripSlice';
 
 const persistConfig = {
   key: 'root',
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
   auth: authSlice,
   payments: paymentsSlice,
   history: historySlice,
+  trip: tripSlice,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -26,6 +28,8 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+        ignoredActionsPaths: ['payload'],
+        ignoredPaths: ['history.transactions', 'trip.transactions'],
       },
     }),
 });
