@@ -18,8 +18,8 @@ export interface Transaction {
   type: 'debit' | 'credit' | 'refund';
   status: 'pending' | 'completed' | 'failed';
   rawMeta: Record<string, any>;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO8601
+  updatedAt: string; // ISO8601
 }
 
 export interface AuthToken {
@@ -56,4 +56,30 @@ export interface PaymentResult {
   success: boolean;
   transactionId?: string;
   error?: string;
+}
+
+export interface TripGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  currency: string;
+  startDate: string;
+  endDate: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TripTransaction {
+  id: string;
+  tripId: string;
+  amount: number;
+  merchantName: string;
+  description?: string;
+  category: string;
+  timestamp: string;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -9,17 +9,18 @@ export const formatDateToISO = (date: Date): string => {
   return format(date, 'yyyy-MM-dd');
 };
 
-export const formatCurrency = (amount: number, currency = 'USD'): string => {
-  return new Intl.NumberFormat('en-US', {
+export const formatCurrency = (amount: number, currency = 'INR'): string => {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency,
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 };
 
 export const convertUTCToLocal = (utcTimestamp: string): Date => {
   const utcDate = parseISO(utcTimestamp);
-  // For simplicity in testing, just return the UTC date
-  // In production, you'd handle timezone conversion properly
+  // #region UTC DATE
   return utcDate;
 };
 
