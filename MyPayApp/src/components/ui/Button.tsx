@@ -96,8 +96,7 @@ const Button: React.FC<ButtonProps> = ({
       style={getButtonStyle()}
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.7}
-    >
+      activeOpacity={0.7}>
       {loading ? (
         <ActivityIndicator
           color={variant === 'secondary' ? '#1976d2' : 'white'}

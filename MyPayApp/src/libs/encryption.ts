@@ -1,13 +1,8 @@
 import * as Keychain from 'react-native-keychain';
 
-// Polyfills for React Native environment
-declare global {
-  var btoa: (data: string) => string;
-  var atob: (data: string) => string;
-  var crypto: {
-    getRandomValues: (arr: Uint8Array) => Uint8Array;
-  };
-}
+// Type augmentation for React Native environment
+// Note: btoa, atob, and crypto are already declared in lib.dom.d.ts
+// We only need to ensure they're available at runtime through polyfills
 
 export class EncryptionService {
   private static readonly ENCRYPTION_KEY_SERVICE = 'mypay-encryption-key';
@@ -62,7 +57,7 @@ export class EncryptionService {
   async encrypt(data: string): Promise<string> {
     try {
       const key = await this.getOrCreateEncryptionKey();
-      
+
       // Simple XOR encryption for demo purposes
       // In production, use proper AES encryption
       const encrypted = this.simpleXOREncrypt(data, key);
@@ -81,7 +76,7 @@ export class EncryptionService {
   async decrypt(encryptedData: string): Promise<string> {
     try {
       const key = await this.getOrCreateEncryptionKey();
-      
+
       // Check if it's valid base64
       try {
         if (typeof atob !== 'undefined') {
@@ -94,7 +89,7 @@ export class EncryptionService {
       } catch {
         throw new Error('Invalid base64 format');
       }
-      
+
       // Decode from Base64 and decrypt
       let encoded: string;
       if (typeof atob !== 'undefined') {
@@ -130,15 +125,15 @@ export class EncryptionService {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     let result = '';
     let i = 0;
-    
+
     while (i < numbers.length) {
       const a = numbers[i++];
       const b = i < numbers.length ? numbers[i++] : 0;
       const c = i < numbers.length ? numbers[i++] : 0;
-      
+
       // eslint-disable-next-line no-bitwise
       const bitmap = (a << 16) | (b << 8) | c;
-      
+
       // eslint-disable-next-line no-bitwise
       result += chars.charAt((bitmap >> 18) & 63);
       // eslint-disable-next-line no-bitwise
@@ -148,7 +143,7 @@ export class EncryptionService {
       // eslint-disable-next-line no-bitwise
       result += i - 1 < numbers.length ? chars.charAt(bitmap & 63) : '=';
     }
-    
+
     return result;
   }
 
@@ -158,18 +153,18 @@ export class EncryptionService {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     let result = '';
     let i = 0;
-    
+
     str = str.replace(/[^A-Za-z0-9+/]/g, '');
-    
+
     while (i < str.length) {
       const encoded1 = chars.indexOf(str.charAt(i++));
       const encoded2 = chars.indexOf(str.charAt(i++));
       const encoded3 = chars.indexOf(str.charAt(i++));
       const encoded4 = chars.indexOf(str.charAt(i++));
-      
+
       // eslint-disable-next-line no-bitwise
       const bitmap = (encoded1 << 18) | (encoded2 << 12) | (encoded3 << 6) | encoded4;
-      
+
       // eslint-disable-next-line no-bitwise
       result += String.fromCharCode((bitmap >> 16) & 255);
       // eslint-disable-next-line no-bitwise
@@ -177,7 +172,7 @@ export class EncryptionService {
       // eslint-disable-next-line no-bitwise
       if (encoded4 !== 64) result += String.fromCharCode(bitmap & 255);
     }
-    
+
     return result;
   }
 
@@ -193,9 +188,9 @@ export class EncryptionService {
 
   async clearEncryptionKey(): Promise<void> {
     try {
-      await Keychain.resetInternetCredentials('mypay-encryption-key' as any);
-      this.encryptionKey = null;
-      // Also clear the in-memory key to simulate wrong key scenario
+      await Keychain.resetInternetCredentials({
+        server: EncryptionService.ENCRYPTION_KEY_SERVICE
+      });
       this.encryptionKey = null;
     } catch (error) {
       console.error('Failed to clear encryption key:', error);

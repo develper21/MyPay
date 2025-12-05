@@ -8,12 +8,10 @@ import AppNavigator from '../src/navigation/AppNavigator';
 
 const AppContent = () => {
   useEffect(() => {
-    // Initialize database
     databaseService.initDatabase().catch(error => {
       console.error('Failed to initialize database:', error);
     });
 
-    // Cleanup on unmount
     return () => {
       databaseService.closeDatabase().catch(console.error);
     };
