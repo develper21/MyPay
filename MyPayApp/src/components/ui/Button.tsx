@@ -7,6 +7,7 @@ import {
   TextStyle,
   ActivityIndicator,
 } from 'react-native';
+import { colors, typography, borderRadius, shadows, spacing } from '../../theme/theme';
 
 interface ButtonProps {
   title: string;
@@ -31,30 +32,31 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const getButtonStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
-      borderRadius: 8,
+      borderRadius: borderRadius.md,
       alignItems: 'center',
       justifyContent: 'center',
+      ...shadows.sm,
     };
 
     // Size styles
     const sizeStyles: Record<string, ViewStyle> = {
-      small: { paddingHorizontal: 16, paddingVertical: 8, minHeight: 36 },
-      medium: { paddingHorizontal: 24, paddingVertical: 12, minHeight: 48 },
-      large: { paddingHorizontal: 32, paddingVertical: 16, minHeight: 56 },
+      small: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, minHeight: 36 },
+      medium: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: 48 },
+      large: { paddingHorizontal: spacing.xl, paddingVertical: spacing.lg, minHeight: 56 },
     };
 
     // Variant styles
     const variantStyles: Record<string, ViewStyle> = {
       primary: {
-        backgroundColor: disabled ? '#ccc' : '#1976d2',
+        backgroundColor: disabled ? colors.border : colors.primary,
       },
       secondary: {
-        backgroundColor: disabled ? '#f5f5f5' : 'white',
+        backgroundColor: disabled ? colors.surfaceVariant : colors.surface,
         borderWidth: 1,
-        borderColor: disabled ? '#ccc' : '#1976d2',
+        borderColor: disabled ? colors.border : colors.primary,
       },
       danger: {
-        backgroundColor: disabled ? '#ffcdd2' : '#d32f2f',
+        backgroundColor: disabled ? '#FEE2E2' : colors.danger,
       },
     };
 
@@ -68,19 +70,19 @@ const Button: React.FC<ButtonProps> = ({
 
   const getTextStyle = (): TextStyle => {
     const baseStyle: TextStyle = {
-      fontWeight: '600',
+      fontWeight: typography.fontWeight.semibold,
     };
 
     const sizeStyles: Record<string, TextStyle> = {
-      small: { fontSize: 14 },
-      medium: { fontSize: 16 },
-      large: { fontSize: 18 },
+      small: { fontSize: typography.fontSize.sm },
+      medium: { fontSize: typography.fontSize.base },
+      large: { fontSize: typography.fontSize.lg },
     };
 
     const variantStyles: Record<string, TextStyle> = {
-      primary: { color: 'white' },
-      secondary: { color: disabled ? '#999' : '#1976d2' },
-      danger: { color: 'white' },
+      primary: { color: colors.textOnPrimary },
+      secondary: { color: disabled ? colors.textTertiary : colors.primary },
+      danger: { color: colors.textOnPrimary },
     };
 
     return {
@@ -99,7 +101,7 @@ const Button: React.FC<ButtonProps> = ({
       activeOpacity={0.7}>
       {loading ? (
         <ActivityIndicator
-          color={variant === 'secondary' ? '#1976d2' : 'white'}
+          color={variant === 'secondary' ? colors.primary : colors.textOnPrimary}
           size="small"
         />
       ) : (
