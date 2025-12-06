@@ -7,15 +7,23 @@ import {
   ScrollView,
   Alert,
   Modal,
+  TouchableOpacity,
+  Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useDispatch, useSelector } from 'react-redux';
 import { sendPayment, fetchAccounts } from './paymentsSlice';
 import { addTransaction } from '../../history/historySlice';
 import { RootState, AppDispatch } from '../../store/store';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import GradientCard from '../../components/ui/GradientCard';
 import { formatCurrency } from '../../utils/dateHelpers';
 import { Account, Transaction } from '../../types';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { colors, typography, spacing, borderRadius, shadows } from '../../theme/theme';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const PayScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -26,6 +34,7 @@ const PayScreen: React.FC = () => {
   const [note, setNote] = useState('');
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showAmountKeypad, setShowAmountKeypad] = useState(false);
 
   React.useEffect(() => {
     dispatch(fetchAccounts());
@@ -116,74 +125,129 @@ const PayScreen: React.FC = () => {
   ];
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Send Money</Text>
+        <Text style={styles.subtitle}>Transfer money instantly and securely</Text>
       </View>
 
+      {/* Amount Input Card */}
+      <GradientCard gradientColors={['#6366F1', '#8B5CF6']} padding={0}>
+        <View style={styles.amountCard}>
+          <Text style={styles.amountLabel}>Amount</Text>
+          <TouchableOpacity 
+            style={styles.amountInputContainer}
+            onPress={() => setShowAmountKeypad(true)}
+          >
+            <Text style={styles.amountInput}>
+              {amount || '0'}
+            </Text>
+            <Text style={styles.currencySymbol}>₹</Text>
+          </TouchableOpacity>
+          {amount && parseFloat(amount) > 0 && (
+            <Text style={styles.amountPreview}>
+              {formatCurrency(parseFloat(amount))}
+            </Text>
+          )}
+        </View>
+      </GradientCard>
+
+      {/* Quick Amount Buttons */}
+      <View style={styles.quickAmountContainer}>
+        <Text style={styles.quickAmountTitle}>Quick Amount</Text>
+        <View style={styles.quickAmountButtons}>
+          {[500, 1000, 2000, 5000].map((value) => (
+            <TouchableOpacity
+              key={value}
+              style={styles.quickAmountButton}
+              onPress={() => setAmount(value.toString())}
+            >
+              <Text style={styles.quickAmountText}>₹{value}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* From Account Selection */}
       <Card style={styles.card}>
         <Text style={styles.label}>From Account</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.accountList}>
             {(mockAccounts).map((account) => (
-              <Button
+              <TouchableOpacity
                 key={account.id}
-                title={`${account.accountName}\n${account.maskedAccountNumber}`}
+                style={[
+                  styles.accountCard,
+                  selectedAccount?.id === account.id && styles.accountCardSelected
+                ]}
                 onPress={() => setSelectedAccount(account)}
-                variant={selectedAccount?.id === account.id ? 'primary' : 'secondary'}
-                style={styles.accountButton}
-                textStyle={styles.accountButtonText}
-              />
+              >
+                <View style={styles.accountIcon}>
+                  <Icon 
+                    name={account.type === 'checking' ? 'account-balance' : 'savings'} 
+                    size={24} 
+                    color={selectedAccount?.id === account.id ? '#FFFFFF' : colors.primary} 
+                  />
+                </View>
+                <View style={styles.accountInfo}>
+                  <Text style={[
+                    styles.accountName,
+                    selectedAccount?.id === account.id && styles.accountNameSelected
+                  ]}>
+                    {account.accountName}
+                  </Text>
+                  <Text style={[
+                    styles.accountNumber,
+                    selectedAccount?.id === account.id && styles.accountNumberSelected
+                  ]}>
+                    {account.maskedAccountNumber}
+                  </Text>
+                </View>
+              </TouchableOpacity>
             ))}
           </View>
         </ScrollView>
       </Card>
 
+      {/* Recipient Input */}
       <Card style={styles.card}>
-        <Text style={styles.label}>Recipient</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter email, phone, or account ID"
-          value={recipient}
-          onChangeText={setRecipient}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+        <View style={styles.inputContainer}>
+          <Icon name="person" size={20} color={colors.textTertiary} style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter email, phone, or account ID"
+            placeholderTextColor={colors.textTertiary}
+            value={recipient}
+            onChangeText={setRecipient}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
       </Card>
 
+      {/* Note Input */}
       <Card style={styles.card}>
-        <Text style={styles.label}>Amount</Text>
-        <TextInput
-          style={[styles.input, styles.amountInput]}
-          placeholder="0.00"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="numeric"
-        />
-        {amount && parseFloat(amount) > 0 && (
-          <Text style={styles.amountPreview}>
-            {formatCurrency(parseFloat(amount))}
-          </Text>
-        )}
+        <View style={styles.inputContainer}>
+          <Icon name="note" size={20} color={colors.textTertiary} style={styles.inputIcon} />
+          <TextInput
+            style={[styles.input, styles.noteInput]}
+            placeholder="Add a note (optional)"
+            placeholderTextColor={colors.textTertiary}
+            value={note}
+            onChangeText={setNote}
+            multiline
+            numberOfLines={2}
+          />
+        </View>
       </Card>
 
-      <Card style={styles.card}>
-        <Text style={styles.label}>Note (optional)</Text>
-        <TextInput
-          style={[styles.input, styles.noteInput]}
-          placeholder="Add a note..."
-          value={note}
-          onChangeText={setNote}
-          multiline
-          numberOfLines={3}
-        />
-      </Card>
-
+      {/* Send Button */}
       <Button
         title="Send Money"
         onPress={handleSendPayment}
         loading={isSendingPayment}
-        disabled={!recipient || !amount || parseFloat(amount) <= 0}
+        disabled={!recipient || !amount || parseFloat(amount) <= 0 || !selectedAccount}
         style={styles.sendButton}
       />
 
@@ -196,28 +260,37 @@ const PayScreen: React.FC = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Confirm Payment</Text>
+            <View style={styles.modalHeader}>
+              <Icon name="payment" size={32} color={colors.primary} />
+              <Text style={styles.modalTitle}>Confirm Payment</Text>
+            </View>
             
             <View style={styles.confirmationDetails}>
-              <Text style={styles.confirmationLabel}>To:</Text>
-              <Text style={styles.confirmationValue}>{recipient}</Text>
+              <View style={styles.confirmationRow}>
+                <Text style={styles.confirmationLabel}>To:</Text>
+                <Text style={styles.confirmationValue}>{recipient}</Text>
+              </View>
               
-              <Text style={styles.confirmationLabel}>Amount:</Text>
-              <Text style={styles.confirmationValue}>
-                {formatCurrency(parseFloat(amount))}
-              </Text>
+              <View style={styles.confirmationRow}>
+                <Text style={styles.confirmationLabel}>Amount:</Text>
+                <Text style={styles.confirmationAmount}>
+                  {formatCurrency(parseFloat(amount))}
+                </Text>
+              </View>
               
               {note && (
-                <>
+                <View style={styles.confirmationRow}>
                   <Text style={styles.confirmationLabel}>Note:</Text>
                   <Text style={styles.confirmationValue}>{note}</Text>
-                </>
+                </View>
               )}
               
-              <Text style={styles.confirmationLabel}>From:</Text>
-              <Text style={styles.confirmationValue}>
-                {selectedAccount?.accountName} ({selectedAccount?.maskedAccountNumber})
-              </Text>
+              <View style={styles.confirmationRow}>
+                <Text style={styles.confirmationLabel}>From:</Text>
+                <Text style={styles.confirmationValue}>
+                  {selectedAccount?.accountName} ({selectedAccount?.maskedAccountNumber})
+                </Text>
+              </View>
             </View>
 
             <View style={styles.modalButtons}>
@@ -243,102 +316,218 @@ const PayScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
-    padding: 20,
-    paddingTop: 40,
+    paddingTop: spacing.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: typography.fontSize.xxxl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    fontSize: typography.fontSize.base,
+    color: colors.textSecondary,
+    fontWeight: typography.fontWeight.medium,
+  },
+  amountCard: {
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  amountLabel: {
+    fontSize: typography.fontSize.base,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: spacing.lg,
+    fontWeight: typography.fontWeight.medium,
+  },
+  amountInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: spacing.md,
+  },
+  amountInput: {
+    fontSize: typography.fontSize.massive,
+    fontWeight: typography.fontWeight.bold,
+    color: '#FFFFFF',
+  },
+  currencySymbol: {
+    fontSize: typography.fontSize.xxxl,
+    fontWeight: typography.fontWeight.bold,
+    color: 'rgba(255,255,255,0.8)',
+    marginLeft: spacing.sm,
+  },
+  amountPreview: {
+    fontSize: typography.fontSize.base,
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: typography.fontWeight.medium,
+  },
+  quickAmountContainer: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  quickAmountTitle: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
+  quickAmountButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  quickAmountButton: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    alignItems: 'center',
+    marginHorizontal: spacing.xs,
+    ...shadows.sm,
+  },
+  quickAmountText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.primary,
   },
   card: {
-    marginHorizontal: 20,
-    marginBottom: 20,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.md,
   },
   accountList: {
     flexDirection: 'row',
-    gap: 12,
+    gap: spacing.md,
   },
-  accountButton: {
-    minWidth: 150,
+  accountCard: {
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    minWidth: 160,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  accountButtonText: {
-    fontSize: 12,
-    textAlign: 'center',
+  accountCardSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  accountIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  accountInfo: {
+    flex: 1,
+  },
+  accountName: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  accountNameSelected: {
+    color: '#FFFFFF',
+  },
+  accountNumber: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+  },
+  accountNumberSelected: {
+    color: 'rgba(255,255,255,0.8)',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  inputIcon: {
+    marginRight: spacing.sm,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
-    backgroundColor: 'white',
-  },
-  amountInput: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  amountPreview: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1976d2',
-    textAlign: 'center',
-    marginTop: 8,
+    flex: 1,
+    fontSize: typography.fontSize.base,
+    color: colors.text,
+    paddingVertical: spacing.sm,
   },
   noteInput: {
-    height: 80,
+    minHeight: 60,
     textAlignVertical: 'top',
   },
   sendButton: {
-    marginHorizontal: 20,
-    marginBottom: 20,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 24,
-    margin: 20,
-    width: '90%',
-    maxWidth: 400,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    margin: spacing.lg,
+    width: screenWidth - spacing.lg * 2,
+    ...shadows.lg,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
+    marginTop: spacing.sm,
   },
   confirmationDetails: {
-    marginBottom: 24,
+    marginBottom: spacing.xl,
+  },
+  confirmationRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
   },
   confirmationLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    fontSize: typography.fontSize.base,
+    color: colors.textSecondary,
+    fontWeight: typography.fontWeight.medium,
   },
   confirmationValue: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 16,
+    fontSize: typography.fontSize.base,
+    color: colors.text,
+    fontWeight: typography.fontWeight.semibold,
+    flex: 1,
+    textAlign: 'right',
+    marginLeft: spacing.lg,
+  },
+  confirmationAmount: {
+    fontSize: typography.fontSize.lg,
+    color: colors.primary,
+    fontWeight: typography.fontWeight.bold,
   },
   modalButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: spacing.md,
   },
   modalButton: {
     flex: 1,
