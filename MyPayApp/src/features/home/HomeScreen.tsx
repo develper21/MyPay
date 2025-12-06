@@ -8,21 +8,27 @@ import {
   Image,
   Animated,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import { fetchAccounts } from '../payments/paymentsSlice';
 import { syncTransactions } from '../../history/historySlice';
 import { RootState, AppDispatch } from '../../store/store';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import GradientCard from '../../components/ui/GradientCard';
 import QRScanner from '../../components/ui/QRScanner';
 import { formatCurrency } from '../../utils/dateHelpers';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { colors, typography, spacing, borderRadius, shadows } from '../../theme/theme';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const HomeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -32,6 +38,7 @@ const HomeScreen: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const fadeAnim = new Animated.Value(0);
+  const slideAnim = new Animated.Value(50);
 
   const isLoading = accountsLoading || transactionsLoading;
 
@@ -42,11 +49,18 @@ const HomeScreen: React.FC = () => {
 
   useEffect(() => {
     handleRefresh();
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [handleRefresh]);
 
   const totalBalance = accounts.reduce((sum, _account) => {
@@ -70,128 +84,190 @@ const HomeScreen: React.FC = () => {
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
         }
+        showsVerticalScrollIndicator={false}
       >
+        {/* Header Section */}
         <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-          <View style={styles.welcomeCard}>
-            <View style={styles.welcomeLeft}>
-              <Icon name="wb-sunny" size={24} color="#FFA500" />
-              <Text style={styles.greeting}>Good {getTimeOfDay()},</Text>
-              <Text style={styles.userName}>{user?.name || 'User'}</Text>
+          <View style={styles.headerTop}>
+            <View style={styles.locationContainer}>
+              <Icon name="location-on" size={20} color={colors.textSecondary} />
+              <Text style={styles.locationText}>Mumbai, India</Text>
             </View>
-            <View style={styles.welcomeRight}>
-            <View style={styles.avatar}>
-              <Icon name="person" size={30} color="#1976d2" />
-            </View>
+            <TouchableOpacity style={styles.notificationBtn}>
+              <Icon name="notifications-none" size={24} color={colors.text} />
+              <View style={styles.notificationBadge} />
+            </TouchableOpacity>
           </View>
-        </View>
-      </Animated.View>
+          
+          <View style={styles.greetingSection}>
+            <Text style={styles.greeting}>Good {getTimeOfDay()},</Text>
+            <Text style={styles.userName}>{user?.name || 'User'}</Text>
+          </View>
+        </Animated.View>
 
-      <Animated.View style={[styles.balanceCard, { opacity: fadeAnim }]}>
-        <View style={styles.balanceHeader}>
-          <Icon name="account-balance-wallet" size={28} color="#1976d2" />
-          <Text style={styles.balanceLabel}>Total Balance</Text>
-        </View>
-        <Text style={styles.balanceAmount}>{formatCurrency(totalBalance)}</Text>
-        <Text style={styles.balanceSubtext}>Across {accounts.length} accounts</Text>
-        <View style={styles.balanceActions}>
-          <TouchableOpacity style={styles.balanceAction}>
-            <Icon name="add-circle-outline" size={24} color="#4caf50" />
-            <Text style={styles.balanceActionText}>Add Money</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.balanceAction}>
-            <Icon name="history" size={24} color="#FF9800" />
-            <Text style={styles.balanceActionText}>History</Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
+        {/* Balance Card with Gradient */}
+        <Animated.View style={[styles.balanceCardContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+          <GradientCard gradientColors={['#6366F1', '#8B5CF6']} padding={0}>
+            <View style={styles.balanceContent}>
+              <View style={styles.balanceHeader}>
+                <View style={styles.balanceTitleRow}>
+                  <Icon name="account-balance-wallet" size={32} color="#FFFFFF" />
+                  <Text style={styles.balanceLabel}>Total Balance</Text>
+                </View>
+                <TouchableOpacity style={styles.eyeBtn}>
+                  <Icon name="visibility" size={20} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+              
+              <Text style={styles.balanceAmount}>{formatCurrency(totalBalance)}</Text>
+              <Text style={styles.balanceSubtext}>Across {accounts.length} accounts</Text>
+              
+              <View style={styles.balanceActions}>
+                <TouchableOpacity style={styles.balanceAction}>
+                  <View style={styles.actionIcon}>
+                    <Icon name="add" size={20} color={colors.primary} />
+                  </View>
+                  <Text style={styles.balanceActionText}>Add Money</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.balanceAction}>
+                  <View style={styles.actionIcon}>
+                    <Icon name="history" size={20} color={colors.primary} />
+                  </View>
+                  <Text style={styles.balanceActionText}>History</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.balanceAction}>
+                  <View style={styles.actionIcon}>
+                    <Icon name="download" size={20} color={colors.primary} />
+                  </View>
+                  <Text style={styles.balanceActionText}>Withdraw</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </GradientCard>
+        </Animated.View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.actionButtons}>
-          <Button
-            title="Send Money"
-            onPress={() => {}}
-            style={styles.actionButton}
-          />
-          <Button
-            title="Scan & Pay"
-            onPress={() => setShowQRScanner(true)}
-            style={styles.actionButton}
-          />
-        </View>
-        <View style={styles.actionButtons}>
-          <Button
-            title="Trip Goals"
-            variant="secondary"
-            onPress={() => navigation.navigate('TripGoals')}
-            style={styles.actionButton}
-          />
-        </View>
-      </View>
+        {/* Quick Actions */}
+        <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActionsGrid}>
+            <TouchableOpacity style={styles.quickAction}>
+              <View style={styles.quickActionIcon}>
+                <Icon name="send" size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.quickActionText}>Send Money</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickAction}>
+              <View style={styles.quickActionIcon}>
+                <Icon name="qr-code-scanner" size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.quickActionText}>Scan & Pay</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickAction}>
+              <View style={styles.quickActionIcon}>
+                <Icon name="request" size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.quickActionText}>Request</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickAction}>
+              <View style={styles.quickActionIcon}>
+                <Icon name="phone-android" size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.quickActionText}>Recharge</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
-        {recentTransactions.length > 0 ? (
-          recentTransactions.map((transaction) => (
-            <Card key={transaction.id} style={styles.transactionCard}>
-              <View style={styles.transactionHeader}>
-                <Text style={styles.merchantName}>
-                  {transaction.merchantName || 'Transaction'}
-                </Text>
+      {/* Recent Transactions */}
+        <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Transactions</Text>
+            <TouchableOpacity onPress={() => {/* Navigate to history */}}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          {recentTransactions.length > 0 ? (
+            recentTransactions.map((transaction) => (
+              <Card key={transaction.id} style={styles.transactionCard}>
+                <View style={styles.transactionHeader}>
+                  <View style={styles.transactionLeft}>
+                    <View style={styles.transactionIcon}>
+                      <Icon 
+                        name={transaction.type === 'credit' ? 'arrow-downward' : 'arrow-upward'} 
+                        size={20} 
+                        color={transaction.type === 'credit' ? colors.secondary : colors.danger} 
+                      />
+                    </View>
+                    <View style={styles.transactionDetails}>
+                      <Text style={styles.merchantName}>
+                        {transaction.merchantName || 'Transaction'}
+                      </Text>
+                      <Text style={styles.transactionDate}>
+                        {new Date(transaction.timestamp).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text
+                    style={[
+                      styles.transactionAmount,
+                      transaction.type === 'credit' ? styles.credit : styles.debit,
+                    ]}
+                  >
+                    {transaction.type === 'credit' ? '+' : '-'}
+                    {formatCurrency(Math.abs(transaction.amount))}
+                  </Text>
+                </View>
+              </Card>
+            ))
+          ) : (
+            <Card style={styles.emptyCard}>
+              <Icon name="receipt-long" size={48} color={colors.textTertiary} />
+              <Text style={styles.emptyText}>No recent transactions</Text>
+              <Text style={styles.emptySubtext}>Your transactions will appear here</Text>
+            </Card>
+          )}
+        </Animated.View>
+
+        {/* Monthly Summary */}
+        {monthSummary && (
+          <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+            <Text style={styles.sectionTitle}>This Month</Text>
+            <Card style={styles.summaryCard}>
+              <View style={styles.summaryHeader}>
+                <Text style={styles.summaryTitle}>Monthly Overview</Text>
+                <TouchableOpacity>
+                  <Icon name="more-vert" size={20} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Spent</Text>
+                  <Text style={styles.summaryValueSpent}>
+                    {formatCurrency(monthSummary.totalSpent)}
+                  </Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Received</Text>
+                  <Text style={styles.summaryValueReceived}>
+                    {formatCurrency(monthSummary.totalReceived)}
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.summaryRow, styles.summaryRowBorder]}>
+                <Text style={styles.summaryLabel}>Net Balance</Text>
                 <Text
                   style={[
-                    styles.transactionAmount,
-                    transaction.type === 'credit' ? styles.credit : styles.debit,
+                    styles.summaryValueNet,
+                    monthSummary.net >= 0 ? styles.credit : styles.debit,
                   ]}
                 >
-                  {transaction.type === 'credit' ? '+' : '-'}
-                  {formatCurrency(Math.abs(transaction.amount))}
+                  {monthSummary.net >= 0 ? '+' : ''}
+                  {formatCurrency(monthSummary.net)}
                 </Text>
               </View>
-              <Text style={styles.transactionDate}>
-                {new Date(transaction.timestamp).toLocaleDateString()}
-              </Text>
             </Card>
-          ))
-        ) : (
-          <Card style={styles.emptyCard}>
-            <Text style={styles.emptyText}>No recent transactions</Text>
-          </Card>
+          </Animated.View>
         )}
-      </View>
-
-      {monthSummary && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>This Month</Text>
-          <Card style={styles.summaryCard}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Spent</Text>
-              <Text style={styles.summaryValue}>
-                {formatCurrency(monthSummary.totalSpent)}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Received</Text>
-              <Text style={styles.summaryValue}>
-                {formatCurrency(monthSummary.totalReceived)}
-              </Text>
-            </View>
-            <View style={[styles.summaryRow, styles.summaryRowBorder]}>
-              <Text style={styles.summaryLabel}>Net</Text>
-              <Text
-                style={[
-                  styles.summaryValue,
-                  monthSummary.net >= 0 ? styles.credit : styles.debit,
-                ]}
-              >
-                {monthSummary.net >= 0 ? '+' : ''}
-                {formatCurrency(monthSummary.net)}
-              </Text>
-            </View>
-          </Card>
-        </View>
-      )}
-    </ScrollView>
+      </ScrollView>
       <QRScanner
         visible={showQRScanner}
         onClose={() => setShowQRScanner(false)}
@@ -207,173 +283,271 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.background,
   },
   header: {
-    padding: 20,
-    paddingTop: 40,
+    paddingTop: spacing.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
   },
-  welcomeCard: {
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: spacing.lg,
   },
-  welcomeLeft: {
-    flex: 1,
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locationText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    marginLeft: spacing.xs,
+    fontWeight: typography.fontWeight.medium,
+  },
+  notificationBtn: {
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.danger,
+  },
+  greetingSection: {
+    marginTop: spacing.sm,
   },
   greeting: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 4,
+    fontSize: typography.fontSize.lg,
+    color: colors.textSecondary,
+    fontWeight: typography.fontWeight.medium,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontSize: typography.fontSize.xxxl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
+    marginTop: spacing.xs,
   },
-  welcomeRight: {
-    alignItems: 'center',
+  balanceCardContainer: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
   },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#e3f2fd',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  balanceCard: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    backgroundColor: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+  balanceContent: {
+    padding: spacing.xl,
   },
   balanceHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: spacing.lg,
+  },
+  balanceTitleRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    flex: 1,
   },
   balanceLabel: {
-    fontSize: 16,
+    fontSize: typography.fontSize.base,
     color: 'rgba(255,255,255,0.8)',
-    marginLeft: 8,
+    marginLeft: spacing.sm,
+    fontWeight: typography.fontWeight.medium,
+  },
+  eyeBtn: {
+    padding: spacing.xs,
   },
   balanceAmount: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 8,
+    fontSize: typography.fontSize.massive,
+    fontWeight: typography.fontWeight.bold,
+    color: '#FFFFFF',
+    marginBottom: spacing.sm,
   },
   balanceSubtext: {
-    fontSize: 14,
+    fontSize: typography.fontSize.sm,
     color: 'rgba(255,255,255,0.7)',
-    marginBottom: 20,
+    marginBottom: spacing.xl,
   },
   balanceActions: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
   },
   balanceAction: {
     alignItems: 'center',
-  },
-  balanceActionText: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 4,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  actionButton: {
     flex: 1,
   },
+  actionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  balanceActionText: {
+    fontSize: typography.fontSize.sm,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: typography.fontWeight.medium,
+  },
+  section: {
+    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
+  },
+  seeAllText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.primary,
+    fontWeight: typography.fontWeight.medium,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  quickAction: {
+    width: (screenWidth - spacing.lg * 3) / 2,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    ...shadows.sm,
+  },
+  quickActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.surfaceVariant,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  quickActionText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text,
+    fontWeight: typography.fontWeight.medium,
+    textAlign: 'center',
+  },
   transactionCard: {
-    marginHorizontal: 20,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
+    padding: spacing.lg,
   },
   transactionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  merchantName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+  transactionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  transactionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceVariant,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
   },
-  credit: {
-    color: '#4caf50',
+  transactionDetails: {
+    flex: 1,
   },
-  debit: {
-    color: '#d32f2f',
+  merchantName: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
   },
   transactionDate: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
+    fontSize: typography.fontSize.sm,
+    color: colors.textTertiary,
+    marginTop: spacing.xs,
+  },
+  transactionAmount: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.bold,
+  },
+  credit: {
+    color: colors.secondary,
+  },
+  debit: {
+    color: colors.danger,
   },
   emptyCard: {
-    marginHorizontal: 20,
     alignItems: 'center',
-    padding: 20,
+    padding: spacing.xxl,
   },
   emptyText: {
-    fontSize: 16,
-    color: '#999',
+    fontSize: typography.fontSize.base,
+    color: colors.textSecondary,
+    marginTop: spacing.lg,
+    fontWeight: typography.fontWeight.medium,
+  },
+  emptySubtext: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textTertiary,
+    marginTop: spacing.xs,
   },
   summaryCard: {
-    marginHorizontal: 20,
+    padding: spacing.lg,
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  summaryTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    alignItems: 'center',
+    paddingVertical: spacing.md,
   },
   summaryRowBorder: {
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    paddingTop: 16,
-    marginTop: 4,
+    borderTopColor: colors.divider,
+    paddingTop: spacing.lg,
+  },
+  summaryItem: {
+    flex: 1,
   },
   summaryLabel: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
   },
-  summaryValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+  summaryValueSpent: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.danger,
+  },
+  summaryValueReceived: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.secondary,
+  },
+  summaryValueNet: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
   },
 });
 
