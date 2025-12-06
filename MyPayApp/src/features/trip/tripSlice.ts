@@ -1,14 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 
-export interface TripGoal {
+export interface TripWallet {
   id: string;
   name: string;
-  targetAmount: number;
-  currentAmount: number;
-  currency: string;
-  startDate: string;
-  endDate: string;
   description?: string;
+  balance: number;
+  currency: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -27,34 +24,42 @@ export interface TripTransaction {
 }
 
 interface TripState {
-  goals: TripGoal[];
+  trips: TripWallet[];
   transactions: TripTransaction[];
-  currentGoal: TripGoal | null;
+  currentTrip: TripWallet | null;
   isLoading: boolean;
   error: string | null;
 }
 
 const initialState: TripState = {
-  goals: [],
+  trips: [],
   transactions: [],
-  currentGoal: null,
+  currentTrip: null,
   isLoading: false,
   error: null,
 };
 
-// Async thunks
-export const createTripGoal = createAsyncThunk(
-  'trip/createGoal',
-  async (goalData: Omit<TripGoal, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newGoal: TripGoal = {
-      ...goalData,
+// Async thunks for wallet operations
+export const createTripWallet = createAsyncThunk(
+  'trip/createWallet',
+  async (walletData: Omit<TripWallet, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newWallet: TripWallet = {
+      ...walletData,
       id: `trip_${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
     
     // In a real app, save to backend/database
-    return newGoal;
+    return newWallet;
+  }
+);
+
+export const addToTripWallet = createAsyncThunk(
+  'trip/addToWallet',
+  async ({ tripId, amount }: { tripId: string; amount: number }) => {
+    // In a real app, update in backend/database
+    return { tripId, amount };
   }
 );
 
@@ -73,47 +78,62 @@ export const addTripTransaction = createAsyncThunk(
   }
 );
 
-export const updateTripGoalAmount = createAsyncThunk(
-  'trip/updateGoalAmount',
-  async ({ goalId, amount }: { goalId: string; amount: number }) => {
-    // In a real app, update in backend/database
-    return { goalId, amount };
-  }
-);
-
 const tripSlice = createSlice({
   name: 'trip',
   initialState,
   reducers: {
-    setCurrentGoal: (state, action: PayloadAction<TripGoal | null>) => {
-      state.currentGoal = action.payload;
+    setCurrentTrip: (state, action: PayloadAction<TripWallet | null>) => {
+      state.currentTrip = action.payload;
     },
     clearError: (state) => {
       state.error = null;
     },
-    deleteGoal: (state, action: PayloadAction<string>) => {
-      state.goals = state.goals.filter(goal => goal.id !== action.payload);
-      if (state.currentGoal?.id === action.payload) {
-        state.currentGoal = null;
+    deleteTrip: (state, action: PayloadAction<string>) => {
+      state.trips = state.trips.filter(trip => trip.id !== action.payload);
+      if (state.currentTrip?.id === action.payload) {
+        state.currentTrip = null;
       }
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(createTripGoal.pending, (state) => {
+      .addCase(createTripWallet.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(createTripGoal.fulfilled, (state, action) => {
+      .addCase(createTripWallet.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.goals.push(action.payload);
-        if (state.goals.length === 1) {
-          state.currentGoal = action.payload;
+        state.trips.push(action.payload);
+        if (state.trips.length === 1) {
+          state.currentTrip = action.payload;
         }
       })
-      .addCase(createTripGoal.rejected, (state, action) => {
+      .addCase(createTripWallet.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Failed to create trip goal';
+        state.error = action.error.message || 'Failed to create trip wallet';
+      })
+      .addCase(addToTripWallet.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(addToTripWallet.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const { tripId, amount } = action.payload;
+        const tripIndex = state.trips.findIndex(trip => trip.id === tripId);
+        if (tripIndex !== -1) {
+          state.trips[tripIndex].balance += amount;
+          state.trips[tripIndex].updatedAt = new Date().toISOString();
+          
+          // Update current trip if it's the same
+          if (state.currentTrip?.id === tripId) {
+            state.currentTrip.balance = state.trips[tripIndex].balance;
+            state.currentTrip.updatedAt = state.trips[tripIndex].updatedAt;
+          }
+        }
+      })
+      .addCase(addToTripWallet.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to add money to trip wallet';
       })
       .addCase(addTripTransaction.pending, (state) => {
         state.isLoading = true;
@@ -123,33 +143,23 @@ const tripSlice = createSlice({
         state.isLoading = false;
         state.transactions.unshift(action.payload);
         
-        // Update current goal amount if transaction is for current goal
-        if (state.currentGoal && action.payload.tripId === state.currentGoal.id) {
-          state.currentGoal.currentAmount += action.payload.amount;
+        // Deduct from current trip balance if transaction is for current trip
+        if (state.currentTrip && action.payload.tripId === state.currentTrip.id) {
+          state.currentTrip.balance -= Math.abs(action.payload.amount);
           
-          // Update in goals array as well
-          const goalIndex = state.goals.findIndex(g => g.id === state.currentGoal?.id);
-          if (goalIndex !== -1) {
-            state.goals[goalIndex].currentAmount = state.currentGoal.currentAmount;
+          // Update in trips array as well
+          const tripIndex = state.trips.findIndex(t => t.id === state.currentTrip?.id);
+          if (tripIndex !== -1) {
+            state.trips[tripIndex].balance = state.currentTrip.balance;
           }
         }
       })
       .addCase(addTripTransaction.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Failed to add trip transaction';
-      })
-      .addCase(updateTripGoalAmount.fulfilled, (state, action) => {
-        const { goalId, amount } = action.payload;
-        const goalIndex = state.goals.findIndex(goal => goal.id === goalId);
-        if (goalIndex !== -1) {
-          state.goals[goalIndex].currentAmount = amount;
-          if (state.currentGoal?.id === goalId) {
-            state.currentGoal.currentAmount = amount;
-          }
-        }
       });
   },
 });
 
-export const { setCurrentGoal, clearError, deleteGoal } = tripSlice.actions;
+export const { setCurrentTrip, clearError, deleteTrip } = tripSlice.actions;
 export default tripSlice.reducer;

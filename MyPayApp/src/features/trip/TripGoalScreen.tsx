@@ -8,170 +8,185 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
+  Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store/store';
-import { createTripGoal, setCurrentGoal } from './tripSlice';
+import { createTripWallet, addToTripWallet, setCurrentTrip } from './tripSlice';
+import { TripWallet } from './tripSlice';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import GradientCard from '../../components/ui/GradientCard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatCurrency } from '../../utils/dateHelpers';
+import { colors, typography, spacing, borderRadius, shadows } from '../../theme/theme';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const TripGoalScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { goals, currentGoal, isLoading } = useSelector((state: RootState) => state.trip);
+  const { trips, currentTrip, isLoading } = useSelector((state: RootState) => state.trip);
   
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [goalName, setGoalName] = useState('');
-  const [targetAmount, setTargetAmount] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [description, setDescription] = useState('');
+  const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
+  const [tripName, setTripName] = useState('');
+  const [tripDescription, setTripDescription] = useState('');
+  const [addAmount, setAddAmount] = useState('');
+  const [selectedTrip, setSelectedTrip] = useState(null);
 
-  const handleCreateGoal = () => {
-    if (!goalName || !targetAmount || !startDate || !endDate) {
-      Alert.alert('Error', 'Please fill all required fields');
+  const handleCreateTrip = () => {
+    if (!tripName) {
+      Alert.alert('Error', 'Please enter trip name');
       return;
     }
 
-    const goalData = {
-      name: goalName,
-      targetAmount: parseFloat(targetAmount),
-      currentAmount: 0,
+    const tripData = {
+      name: tripName,
+      description: tripDescription,
+      balance: 0,
       currency: 'INR',
-      startDate,
-      endDate,
-      description: description || undefined,
       isActive: true,
+      createdAt: new Date().toISOString(),
     };
 
-    dispatch(createTripGoal(goalData)).then((result) => {
+    dispatch(createTripWallet(tripData)).then((result: any) => {
       if (result.meta.requestStatus === 'fulfilled') {
         setShowCreateModal(false);
-        setGoalName('');
-        setTargetAmount('');
-        setStartDate('');
-        setEndDate('');
-        setDescription('');
-        Alert.alert('Success', 'Trip goal created successfully!');
+        setTripName('');
+        setTripDescription('');
+        Alert.alert('Success', 'Trip wallet created successfully!');
       }
     });
   };
 
-  const handleSelectGoal = (goal: any) => {
-    dispatch(setCurrentGoal(goal));
+  const handleAddMoney = () => {
+    if (!addAmount || parseFloat(addAmount) <= 0) {
+      Alert.alert('Error', 'Please enter valid amount');
+      return;
+    }
+
+    if (!currentTrip) {
+      Alert.alert('Error', 'Please select a trip first');
+      return;
+    }
+
+    dispatch(addToTripWallet({ 
+      tripId: currentTrip.id, 
+      amount: parseFloat(addAmount) 
+    })).then((result: any) => {
+      if (result.meta.requestStatus === 'fulfilled') {
+        setShowAddMoneyModal(false);
+        setAddAmount('');
+        Alert.alert('Success', `Added ${formatCurrency(parseFloat(addAmount))} to ${currentTrip.name}`);
+      }
+    });
   };
 
-  const getProgressPercentage = (current: number, target: number) => {
-    return Math.min((current / target) * 100, 100);
+  const handleSelectTrip = (trip: TripWallet) => {
+    dispatch(setCurrentTrip(trip));
   };
 
-  const getDaysRemaining = (endDate: string) => {
-    const end = new Date(endDate);
-    const today = new Date();
-    const diffTime = end.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
+  const getTotalBalance = () => {
+    return trips.reduce((total: number, trip: TripWallet) => total + trip.balance, 0);
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>Trip Goals</Text>
+        <Text style={styles.title}>Trip Wallets</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowCreateModal(true)}
         >
-          <Icon name="add" size={24} color="#ffffff" />
+          <Icon name="add" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
-      {currentGoal && (
-        <Card style={styles.currentGoalCard}>
-          <View style={styles.currentGoalHeader}>
-            <Text style={styles.currentGoalTitle}>Current Goal</Text>
-            <View style={[styles.statusBadge, { backgroundColor: '#4caf50' }]}>
+      {/* Total Balance Card */}
+      <GradientCard gradientColors={['#6366F1', '#8B5CF6']} padding={0}>
+        <View style={styles.totalBalanceCard}>
+          <Text style={styles.totalBalanceLabel}>Total Trip Balance</Text>
+          <Text style={styles.totalBalanceAmount}>{formatCurrency(getTotalBalance())}</Text>
+          <Text style={styles.totalBalanceSubtext}>Across {trips.length} trips</Text>
+          
+          <TouchableOpacity 
+            style={styles.addMoneyButton}
+            onPress={() => setShowAddMoneyModal(true)}
+            disabled={!currentTrip}
+          >
+            <Icon name="add-circle-outline" size={24} color="#FFFFFF" />
+            <Text style={styles.addMoneyText}>Add Money</Text>
+          </TouchableOpacity>
+        </View>
+      </GradientCard>
+
+      {currentTrip && (
+        <Card style={styles.currentTripCard}>
+          <View style={styles.currentTripHeader}>
+            <Text style={styles.currentTripTitle}>Current Trip</Text>
+            <View style={styles.statusBadge}>
               <Text style={styles.statusText}>Active</Text>
             </View>
           </View>
           
-          <Text style={styles.goalName}>{currentGoal.name}</Text>
-          <Text style={styles.goalDescription}>{currentGoal.description}</Text>
+          <Text style={styles.tripName}>{currentTrip.name}</Text>
+          <Text style={styles.tripDescription}>{currentTrip.description}</Text>
           
-          <View style={styles.progressContainer}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressText}>
-                {formatCurrency(currentGoal.currentAmount)} of {formatCurrency(currentGoal.targetAmount)}
-              </Text>
-              <Text style={styles.percentageText}>
-                {getProgressPercentage(currentGoal.currentAmount, currentGoal.targetAmount).toFixed(1)}%
-              </Text>
+          <View style={styles.balanceContainer}>
+            <View style={styles.balanceHeader}>
+              <Text style={styles.balanceLabel}>Available Balance</Text>
+              <Text style={styles.balanceAmount}>{formatCurrency(currentTrip.balance)}</Text>
             </View>
-            <View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${getProgressPercentage(currentGoal.currentAmount, currentGoal.targetAmount)}%` }
-                ]}
-              />
-            </View>
-          </View>
-          
-          <View style={styles.goalDetails}>
-            <View style={styles.detailRow}>
-              <Icon name="date-range" size={20} color="#666" />
-              <Text style={styles.detailText}>
-                {getDaysRemaining(currentGoal.endDate)} days remaining
-              </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Icon name="account-balance-wallet" size={20} color="#666" />
-              <Text style={styles.detailText}>
-                {formatCurrency(currentGoal.targetAmount - currentGoal.currentAmount)} to go
-              </Text>
+            <View style={styles.quickActions}>
+              <TouchableOpacity 
+                style={styles.quickActionButton}
+                onPress={() => setShowAddMoneyModal(true)}
+              >
+                <Icon name="add" size={20} color={colors.primary} />
+                <Text style={styles.quickActionText}>Add Money</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.quickActionButton}>
+                <Icon name="history" size={20} color={colors.primary} />
+                <Text style={styles.quickActionText}>History</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Card>
       )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>All Goals</Text>
-        {goals.length === 0 ? (
+        <Text style={styles.sectionTitle}>All Trips</Text>
+        {trips.length === 0 ? (
           <Card style={styles.emptyCard}>
-            <Icon name="flight-takeoff" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>No trip goals yet</Text>
-            <Text style={styles.emptySubtext}>Create your first trip goal to get started</Text>
+            <Icon name="flight-takeoff" size={48} color={colors.textTertiary} />
+            <Text style={styles.emptyText}>No trip wallets yet</Text>
+            <Text style={styles.emptySubtext}>Create your first trip wallet to get started</Text>
           </Card>
         ) : (
-          goals.map((goal) => (
+          trips.map((trip) => (
             <TouchableOpacity
-              key={goal.id}
-              style={[styles.goalCard, currentGoal?.id === goal.id && styles.selectedGoalCard]}
-              onPress={() => handleSelectGoal(goal)}
+              key={trip.id}
+              style={[styles.tripCard, currentTrip?.id === trip.id && styles.selectedTripCard]}
+              onPress={() => handleSelectTrip(trip)}
             >
-              <View style={styles.goalCardHeader}>
-                <Text style={styles.goalCardName}>{goal.name}</Text>
-                <Text style={styles.goalCardAmount}>
-                  {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
+              <View style={styles.tripCardHeader}>
+                <Text style={styles.tripCardName}>{trip.name}</Text>
+                <Text style={styles.tripCardBalance}>
+                  {formatCurrency(trip.balance)}
                 </Text>
               </View>
-              <View style={styles.miniProgressBar}>
-                <View
-                  style={[
-                    styles.miniProgressFill,
-                    { width: `${getProgressPercentage(goal.currentAmount, goal.targetAmount)}%` }
-                  ]}
-                />
+              <Text style={styles.tripCardDescription}>{trip.description}</Text>
+              <View style={styles.tripCardFooter}>
+                <Icon name="account-balance-wallet" size={16} color={colors.textSecondary} />
+                <Text style={styles.tripCardDate}>Available for payments</Text>
               </View>
-              <Text style={styles.goalCardDate}>
-                {getDaysRemaining(goal.endDate)} days left
-              </Text>
             </TouchableOpacity>
           ))
         )}
       </View>
 
-      {/* Create Goal Modal */}
+      {/* Create Trip Modal */}
       <Modal
         visible={showCreateModal}
         animationType="slide"
@@ -179,7 +194,7 @@ const TripGoalScreen: React.FC = () => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Create Trip Goal</Text>
+            <Text style={styles.modalTitle}>Create Trip Wallet</Text>
             <TouchableOpacity onPress={() => setShowCreateModal(false)}>
               <Icon name="close" size={24} color="#666" />
             </TouchableOpacity>
@@ -187,62 +202,26 @@ const TripGoalScreen: React.FC = () => {
           
           <ScrollView style={styles.modalContent}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Goal Name *</Text>
+              <Text style={styles.inputLabel}>Trip Name *</Text>
               <TextInput
                 style={styles.input}
-                value={goalName}
-                onChangeText={setGoalName}
+                value={tripName}
+                onChangeText={setTripName}
                 placeholder="e.g., Europe Trip 2024"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textTertiary}
               />
-            </View>
-            
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Target Amount (INR) *</Text>
-              <TextInput
-                style={styles.input}
-                value={targetAmount}
-                onChangeText={setTargetAmount}
-                placeholder="50000"
-                keyboardType="numeric"
-                placeholderTextColor="#999"
-              />
-            </View>
-            
-            <View style={styles.inputRow}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-                <Text style={styles.inputLabel}>Start Date *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={startDate}
-                  onChangeText={setStartDate}
-                  placeholder="2024-01-01"
-                  placeholderTextColor="#999"
-                />
-              </View>
-              
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-                <Text style={styles.inputLabel}>End Date *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={endDate}
-                  onChangeText={setEndDate}
-                  placeholder="2024-01-31"
-                  placeholderTextColor="#999"
-                />
-              </View>
             </View>
             
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Description</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Describe your trip goals..."
+                value={tripDescription}
+                onChangeText={setTripDescription}
+                placeholder="Describe your trip..."
                 multiline
                 numberOfLines={3}
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textTertiary}
               />
             </View>
           </ScrollView>
@@ -255,8 +234,63 @@ const TripGoalScreen: React.FC = () => {
               style={styles.modalButton}
             />
             <Button
-              title="Create Goal"
-              onPress={handleCreateGoal}
+              title="Create Trip"
+              onPress={handleCreateTrip}
+              loading={isLoading}
+              style={styles.modalButton}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Add Money Modal */}
+      <Modal
+        visible={showAddMoneyModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add Money to Trip</Text>
+            <TouchableOpacity onPress={() => setShowAddMoneyModal(false)}>
+              <Icon name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.modalContent}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Amount (INR) *</Text>
+              <TextInput
+                style={styles.input}
+                value={addAmount}
+                onChangeText={setAddAmount}
+                placeholder="1000"
+                keyboardType="numeric"
+                placeholderTextColor={colors.textTertiary}
+              />
+            </View>
+            
+            {currentTrip && (
+              <Card style={styles.tripInfoCard}>
+                <Text style={styles.tripInfoLabel}>Adding to:</Text>
+                <Text style={styles.tripInfoName}>{currentTrip.name}</Text>
+                <Text style={styles.tripInfoBalance}>
+                  Current balance: {formatCurrency(currentTrip.balance)}
+                </Text>
+              </Card>
+            )}
+          </View>
+          
+          <View style={styles.modalActions}>
+            <Button
+              title="Cancel"
+              variant="secondary"
+              onPress={() => setShowAddMoneyModal(false)}
+              style={styles.modalButton}
+            />
+            <Button
+              title="Add Money"
+              onPress={handleAddMoney}
               loading={isLoading}
               style={styles.modalButton}
             />
@@ -270,235 +304,280 @@ const TripGoalScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 40,
+    paddingTop: spacing.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontSize: typography.fontSize.xxxl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
   },
   addButton: {
-    backgroundColor: '#1976d2',
+    backgroundColor: colors.primary,
     width: 50,
     height: 50,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    ...shadows.md,
   },
-  currentGoalCard: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    padding: 20,
+  totalBalanceCard: {
+    padding: spacing.xl,
+    alignItems: 'center',
   },
-  currentGoalHeader: {
+  totalBalanceLabel: {
+    fontSize: typography.fontSize.base,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: spacing.sm,
+    fontWeight: typography.fontWeight.medium,
+  },
+  totalBalanceAmount: {
+    fontSize: typography.fontSize.massive,
+    fontWeight: typography.fontWeight.bold,
+    color: '#FFFFFF',
+    marginBottom: spacing.sm,
+  },
+  totalBalanceSubtext: {
+    fontSize: typography.fontSize.sm,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: spacing.lg,
+  },
+  addMoneyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  addMoneyText: {
+    fontSize: typography.fontSize.base,
+    color: '#FFFFFF',
+    fontWeight: typography.fontWeight.semibold,
+    marginLeft: spacing.sm,
+  },
+  currentTripCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
+  },
+  currentTripHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
-  currentGoalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+  currentTripTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: '#4CAF50',
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   statusText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: typography.fontSize.xs,
+    color: '#FFFFFF',
+    fontWeight: typography.fontWeight.semibold,
   },
-  goalName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 8,
+  tripName: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
-  goalDescription: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 20,
+  tripDescription: {
+    fontSize: typography.fontSize.base,
+    color: colors.textSecondary,
+    marginBottom: spacing.lg,
   },
-  progressContainer: {
-    marginBottom: 20,
+  balanceContainer: {
+    gap: spacing.md,
   },
-  progressHeader: {
+  balanceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
   },
-  progressText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
+  balanceLabel: {
+    fontSize: typography.fontSize.base,
+    color: colors.textSecondary,
+    fontWeight: typography.fontWeight.medium,
   },
-  percentageText: {
-    fontSize: 16,
-    color: '#1976d2',
-    fontWeight: 'bold',
+  balanceAmount: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.primary,
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 4,
-    overflow: 'hidden',
+  quickActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#4caf50',
-    borderRadius: 4,
-  },
-  goalDetails: {
-    gap: 8,
-  },
-  detailRow: {
+  quickActionButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
-  detailText: {
-    fontSize: 14,
-    color: '#666',
+  quickActionText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.primary,
+    fontWeight: typography.fontWeight.semibold,
+    marginLeft: spacing.xs,
   },
   section: {
-    marginBottom: 20,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginHorizontal: 20,
-    marginBottom: 12,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
+    marginBottom: spacing.md,
   },
   emptyCard: {
-    marginHorizontal: 20,
     alignItems: 'center',
-    padding: 40,
+    padding: spacing.xl,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
   },
   emptyText: {
-    fontSize: 18,
-    color: '#999',
-    marginTop: 16,
-    marginBottom: 8,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
   },
   emptySubtext: {
-    fontSize: 14,
-    color: '#ccc',
+    fontSize: typography.fontSize.base,
+    color: colors.textTertiary,
+    marginTop: spacing.sm,
     textAlign: 'center',
   },
-  goalCard: {
-    marginHorizontal: 20,
-    marginBottom: 12,
-    padding: 16,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
+  tripCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
     borderWidth: 2,
     borderColor: 'transparent',
   },
-  selectedGoalCard: {
-    borderColor: '#1976d2',
+  selectedTripCard: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '10',
   },
-  goalCardHeader: {
+  tripCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
-  goalCardName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+  tripCardName: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
     flex: 1,
   },
-  goalCardAmount: {
-    fontSize: 14,
-    color: '#666',
+  tripCardBalance: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.primary,
   },
-  miniProgressBar: {
-    height: 4,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 2,
-    marginBottom: 8,
-    overflow: 'hidden',
+  tripCardDescription: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
   },
-  miniProgressFill: {
-    height: '100%',
-    backgroundColor: '#4caf50',
-    borderRadius: 2,
+  tripCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  goalCardDate: {
-    fontSize: 12,
-    color: '#999',
+  tripCardDate: {
+    fontSize: typography.fontSize.xs,
+    color: colors.textTertiary,
+    marginLeft: spacing.xs,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.background,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 40,
+    padding: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: colors.border,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
   },
   modalContent: {
     flex: 1,
-    padding: 20,
+    padding: spacing.lg,
   },
   inputGroup: {
-    marginBottom: 20,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: spacing.lg,
   },
   inputLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: typography.fontSize.base,
+    color: colors.text,
+    backgroundColor: colors.surface,
   },
   textArea: {
     height: 80,
     textAlignVertical: 'top',
   },
+  tripInfoCard: {
+    padding: spacing.md,
+    marginTop: spacing.md,
+  },
+  tripInfoLabel: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  tripInfoName: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  tripInfoBalance: {
+    fontSize: typography.fontSize.sm,
+    color: colors.primary,
+  },
   modalActions: {
     flexDirection: 'row',
-    padding: 20,
-    gap: 12,
+    padding: spacing.lg,
+    gap: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: colors.border,
   },
   modalButton: {
     flex: 1,
