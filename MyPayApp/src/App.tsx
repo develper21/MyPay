@@ -5,6 +5,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './store/store';
 import { databaseService } from './libs/db/database';
 import AppNavigator from './navigation/AppNavigator';
+import { colors } from './theme/theme';
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -22,7 +23,11 @@ const App: React.FC = () => {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <StatusBar barStyle="light-content" backgroundColor="#1976d2" />
+        <StatusBar 
+          barStyle="dark-content" 
+          backgroundColor={colors.background} 
+          translucent={false}
+        />
         <AppNavigator />
       </PersistGate>
     </Provider>
