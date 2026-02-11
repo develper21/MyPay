@@ -1,0 +1,367 @@
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+.env.test
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub-cache/
+.buildlog/
+.android/
+.ios/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+build/
+.gradle/
+local.properties
+*.keystore
+!debug.keystore
+
+# iOS
+*.ipa
+*.dSYM.zip
+*.dSYM
+Pods/
+Podfile.lock
+
+# Web
+build/
+web/
+
+# SpringBoot
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Code
+out/
+target/
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+.mvn/wrapper/maven-wrapper.properties
+
+# Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Spring Boot
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+
+# Certificate files
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+
+# Configuration files with sensitive data
+application-prod.yml
+application-prod.properties
+application-staging.yml
+application-staging.properties
+
+# Docker
+.dockerignore
+
+# Kubernetes
+*.kubeconfig
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Ansible
+*.retry
+
+# Chef
+Berksfile.lock
+
+# Puppet
+Puppetfile.lock
+
+# Vagrant
+.vagrant/
+
+# Local development
+local/
+dev/
+development/
+
+# Test files
+test-results/
+coverage/
+.coverage
+.nyc_output
+
+# Documentation build
+docs/_build/
+site/
+
+# Profiling
+*.prof
+*.pprof
+*.heap
+
+# Memory dumps
+*.hprof
+*.dump
+
+# Lock files (keep package-lock.json but ignore yarn.lock if using npm)
+yarn.lock
+pnpm-lock.yaml
+
+# Environment specific
+.env.development
+.env.production
+.env.test
+.env.staging
+
+# API Keys and Secrets (additional patterns)
+secrets/
+credentials/
+api-keys/
+private-keys/
+certificates/
+
+# Monitoring and Analytics
+*.trace
+*.metrics
+monitoring/
+analytics/
+
+# Backup and Archive
+archives/
+backups/
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Cloud provider specific
+.aws/
+.google/
+.azure/
+.gcp/
+
+# Local configuration overrides
+config/local/
+settings/local/
+
+# User specific files
+user-config/
+user-settings/
+
+# Generated files
+generated/
+auto-generated/
+
+# Temporary build artifacts
+temp/
+tmp/
+temp_files/
+
+# Cache directories
+.cache/
+cache/
+__pycache__/
+.pytest_cache/
+
+# IDE specific files beyond .vscode and .idea
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Large binary files
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mp3
+*.wav
+*.flac
+*.aac
+
+# Font files (if not committed)
+*.ttf
+*.otf
+*.woff
+*.woff2
+*.eot
+
+# Image files (if not committed to assets)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.svg
+*.ico
+
+# Database dumps
+*.sql
+*.dump
+*.backup
+
+# SSL/TLS certificates
+*.csr
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Environment and deployment scripts
+deploy/
+deployment/
+scripts/deploy/
+scripts/production/
+scripts/staging/
+
+# Performance profiling
+*.prof
+*.pprof
+*.trace
+*.perf
+
+# Security scan results
+security-scan/
+vulnerability-reports/
+*.sarif
